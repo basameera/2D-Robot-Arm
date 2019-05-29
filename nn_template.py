@@ -223,4 +223,4 @@ class NeuralNet(nn.Module):
         model.train_loss_hist = checkpoint['train_loss_hist']
         model.valid_loss_hist = checkpoint['valid_loss_hist']
         model.startup_routines()
-return model
+        return model

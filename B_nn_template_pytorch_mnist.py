@@ -96,7 +96,7 @@ class NeuralNet(nn.Module):
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
-    def fit_step(self, training_loader):
+    def fit_step(self, training_loader, epoch):
 
         # Preparations for fit step
         self.train_loss = 0 # Resetting training loss
@@ -121,7 +121,7 @@ class NeuralNet(nn.Module):
             loss.backward()                      # Backward pass
             self.optimizer.step()                # Optimizing weights
 
-            if batch_idx % 10 == 0:
+            if batch_idx % int(len(training_loader)*0.05) == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, batch_idx * len(data), len(training_loader.dataset),
                     100. * batch_idx / len(training_loader), loss))
@@ -156,8 +156,13 @@ class NeuralNet(nn.Module):
                 pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
                 correct += pred.eq(target.view_as(pred)).sum().item()
 
+            self.valid_loss /= len(validation_loader.dataset)
+
             # Adding loss to history
             self.valid_loss_hist.append(self.valid_loss / len(validation_loader))
+        print('\nValidation set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+            self.valid_loss, correct, len(validation_loader.dataset),
+            100. * correct / len(validation_loader.dataset)))
 
     def fit(self, training_loader, validation_loader=None, epochs=2, show_progress=True, save_best=False):
 
@@ -166,7 +171,7 @@ class NeuralNet(nn.Module):
 
         # Looping through epochs
         for epoch in range(epochs):
-            self.fit_step(training_loader) # Optimizing
+            self.fit_step(training_loader, epoch) # Optimizing
             if validation_loader != None:  # Perform validation?
                 self.validation_step(validation_loader) # Calculating validation loss
 

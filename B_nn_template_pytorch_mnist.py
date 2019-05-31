@@ -2,8 +2,7 @@
 Sameera Sandaruwan
 
 To Do;
-3. Load Model
-5. Check mean and std
+* add more cmd args
 
 === Features ===
 * Fit
@@ -13,8 +12,11 @@ To Do;
 * Predict
 * Show progress
 * Plotting
+* CMD Args
 
 """
+from __future__ import print_function
+import argparse
 
 # Importing PyTorch tools
 import torch
@@ -215,11 +217,34 @@ class NeuralNet(nn.Module):
         model.startup_routines()
         return model
 
+# cmd args
+def cmdArgs():
+    parser = argparse.ArgumentParser(description='PyTorch NN Template\n- by Bassandaruwan')
+    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+                        help='input batch size for training (default: 64)')
+    parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
+                        help='input batch size for testing (default: 1000)')
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+                        help='number of epochs to train (default: 10)')
+    parser.add_argument('--no-cuda', action='store_true', default=True,
+                        help='disables CUDA training')
+    
+    parser.add_argument('--save-model', action='store_true', default=False,
+                        help='For Saving the trained Model')
+    parser.add_argument('--save-best', action='store_true', default=False,
+                        help='For Saving the current Best Model')
+    return parser.parse_args()
+
 # Let's run
 def main():
-    batch_size = 64
-    valid_batch_size = 1000
-    use_cuda = torch.cuda.is_available()
+    args = cmdArgs()
+    print(args)
+
+    batch_size = args.batch_size
+    valid_batch_size = args.test_batch_size
+
+
+    use_cuda = not args.no_cuda and torch.cuda.is_available()
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST('../data', train=True, download=True,
@@ -239,13 +264,15 @@ def main():
         batch_size=valid_batch_size, shuffle=False, **kwargs)
 
     # Instantiate mode
-    # model = NeuralNet()
+    model = NeuralNet()
 
     # Train model
-    # model.fit(train_loader, valid_loader, epochs=1, show_progress=True, save_plot=True)
+    model.fit(train_loader, valid_loader, epochs=args.epochs, save_best=args.save_best, show_progress=False, save_plot=False)
     
     # save model
-    # model.save()
+    if args.save_model:
+        print("saving model")
+        model.save()
 
     # load model
     # model = NeuralNet().load()
@@ -253,10 +280,10 @@ def main():
     # test model
     print('******************************')
 
-    for input, target in valid_loader:
-        output = model.predict(input)
-        print(torch.argmax(output[0]), target[0])
-        break
+    # for input, target in valid_loader:
+    #     output = model.predict(input)
+    #     print(torch.argmax(output[0]), target[0])
+    #     break
 
 # main 
 if __name__ == '__main__':
